@@ -44,17 +44,21 @@ public class CustomPlaybackDB extends SQLiteOpenHelper {
 
     // Лёгкое сохранение (Android сам разберётся с буфером в памяти)
     public void savePosition(long songId, int position) {
-        try {
-            SQLiteDatabase db = this.getWritableDatabase();
-            ContentValues values = new ContentValues();
-            values.put(KEY_SONG_ID, songId);
-            values.put(KEY_POSITION, position);
-            values.put(KEY_TIMESTAMP, System.currentTimeMillis());
-
-            db.insertWithOnConflict(TABLE_POSITIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE);
-        } catch (Exception e) {
-        }
-    }
+ try {
+ SQLiteDatabase db = this.getWritableDatabase();
+ 
+ // НАШ КОРРЕКТИРУЮЩИЙ КОД: Полностью вычищаем таблицу перед сохранением новой позиции
+ db.delete(TABLE_POSITIONS, null, null);
+ 
+ ContentValues values = new ContentValues();
+ values.put(KEY_SONG_ID, songId);
+ values.put(KEY_POSITION, position);
+ values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+ db.insert(TABLE_POSITIONS, null, values); // CONFLICT_REPLACE больше не нужен, так как таблица пуста
+ } catch (Exception e) {
+ // Молча гасим ошибки для нестрессовости
+ }
+}
 
     public int getPosition(long songId) {
         int position = 0;
